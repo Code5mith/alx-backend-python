@@ -1,168 +1,124 @@
 import mysql.connector
 from mysql.connector import errorcode
-from dotenv import load_dotenv
-import os 
-import faker 
-import pandas as pd
-import random
+import os
+import uuid
+import csv
+import sys
 
-load_dotenv()
+# Replace with your MySQL credentials from .env
+# This assumes your .env file is set up correctly
+MYSQL_HOST = os.getenv("HOST")
+MYSQL_USER = os.getenv("USER")
+MYSQL_PASSWORD = os.getenv("KEY")
+DATABASE_NAME = 'ALX_prodev'
+TABLE_NAME = 'user_data'
 
 def connect_db():
-  conn = None
-  try:
-    conn = mysql.connector.connect(user=os.getenv("USER"),
-                                  host=os.getenv("HOST"),
-                                  password=os.getenv("KEY"),
-                                  database='Alx_Air_BnB_DB')
-    yield conn 
+    """
+    Connects to the MySQL database server and returns a connection object.
     
-  except mysql.connector.Error as err:
-
-    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-      print("Access Denied Something is wrong with your user name or password")
-    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-      print("Database does not exist")
-    else:
-      print(err)
-
-  # finally:
-
-  #   if conn and conn.is_connected():
-  #       conn.close()
-
-
-TABLES = {}
-
-factory = faker.Faker()
-
-# Generator Obj
-Connect_DB = connect_db()
-
-TABLES['user_data'] = (
-"""
-    CREATE TABLE IF NOT EXISTS `user_data` (
-    `user_id` INT PRIMARY KEY AUTO_INCREMENT,
-    `name` VARCHAR(255) NOT NULL,
-    `email` VARCHAR(255) NOT NULL,
-    `age` INT(11) NOT NULL
-    )  ENGINE=InnoDB
-"""
-  )
-
-def create_database(DB_Connection):
-  cursor = DB_Connection.cursor()
-  print("Creating DB")
-  yield {
-    
-    cursor.execute(
-    """ 
-      CREATE DATABASE IF NOT EXISTS `ALX_prodev`
+    Returns:
+        mysql.connector.connection.MySQLConnection: The connection object if successful, None otherwise.
     """
-  )
-}
-  DB_Connection.close()
-  print(DB_Connection.is_connected())
-
-def connect_to_prodev(DB_Connection):
-  cursor = DB_Connection.cursor()
-  print("Connecting to DB")
-  yield cursor.execute(
-    """
-      USE `ALX_prodev`
-    """
-  )
-
-def create_table(DB_Connection, Return_Connection:bool = False): 
-
-  cursor = DB_Connection.cursor()
-
-  # Create DB
-  next(create_database(DB_Connection=DB_Connection))
-
-  cursor.execute(
-    """
-      SHOW DATABASES
-    """
-  )
-
-  DB_LIST = cursor.fetchall()
-
-
-  print(DB_LIST[0][0])
-
-  for db in DB_LIST:
-    if db[0] == "ALX_prodev":
-      # Connect to DB
-      next(connect_to_prodev(DB_Connection=DB_Connection))
-      # Create user_date
-      cursor.execute(TABLES["user_data"])
-    else:
-      print("Db not found")
-      
-    DB_Connection.close()
-  
-
-def insert_data(DB_Connection):
-
-  df = pd.read_csv("sample_data.csv") 
-
-  cursor = DB_Connection.cursor()
-
-  cursor.execute(
-    """
-      SHOW DATABASES
-    """
-  )
-
-  DB_LIST = cursor.fetchall()
-
-  for db in DB_LIST:
-    if db[0] == "ALX_prodev":
-      # Connect to DB
-      next(connect_to_prodev(DB_Connection=DB_Connection))
-      
-      cursor.execute(
-        """ 
-          SHOW TABLES
-        """
-      )
-      results = cursor.fetchall()
-
-      for result in results:
-
-        if result[0] == "user_data":
-
-          print("Table found!")
-
-          for x in range(5):
-            index = random.randint(0,len(df)) 
-            cursor.execute(
-                """
-                  INSERT INTO `user_data` (name, email, age)
-                  VALUES (%s, %s, %s);
-                """,
-                (df["name"][index], df["email"][index], int(df["age"][index]))
-              )
-          
-            DB_Connection.commit()
-
+    try:
+        conn = mysql.connector.connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD
+        )
+        return conn
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Access Denied: Check your user name or password.")
         else:
-          print("*** Table not found!")
-          create_table(DB_Connection=DB_Connection)
-          next(connect_to_prodev(DB_Connection=DB_Connection))
-          cursor.execute(
-              """
-                INSERT INTO `user_data` (name, email, age)
-                VALUES (%s, %s, %s);
-              """,
-              (factory.name(), factory.email(), factory.random_number(2))
-            )
+            print(f"Connection Error: {err}")
+        return None
 
-          DB_Connection.commit()
+def create_database(connection):
+    """
+    Creates the database ALX_prodev if it does not exist.
+    """
+    cursor = connection.cursor()
+    try:
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DATABASE_NAME}")
+        print(f"Database '{DATABASE_NAME}' created or already exists.")
+    except mysql.connector.Error as err:
+        print(f"Error creating database: {err}")
+    finally:
+        cursor.close()
 
-  DB_Connection.close()
-  print("Db Connection :", DB_Connection.is_connected())
+def connect_to_prodev():
+    """
+    Connects to the ALX_prodev database and returns a connection object.
+    
+    Returns:
+        mysql.connector.connection.MySQLConnection: The connection object if successful, None otherwise.
+    """
+    try:
+        conn = mysql.connector.connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=DATABASE_NAME
+        )
+        return conn
+    except mysql.connector.Error as err:
+        print(f"Error connecting to database '{DATABASE_NAME}': {err}")
+        return None
 
-insert_data(next(connect_db()))
+def create_table(connection):
+    """
+    Creates a table user_data if it does not exist.
+    """
+    cursor = connection.cursor()
+    try:
+        create_table_query = f"""
+        CREATE TABLE IF NOT EXISTS `{TABLE_NAME}` (
+            `user_id` VARCHAR(36) PRIMARY KEY,
+            `name` VARCHAR(255) NOT NULL,
+            `email` VARCHAR(255) NOT NULL UNIQUE,
+            `age` INT NOT NULL
+        ) ENGINE=InnoDB
+        """
+        cursor.execute(create_table_query)
+        connection.commit()
+        print(f"Table '{TABLE_NAME}' created successfully.")
+    except mysql.connector.Error as err:
+        print(f"Error creating table: {err}")
+    finally:
+        cursor.close()
 
+def insert_data(connection, data_file_path):
+    """
+    Inserts data from a CSV file into the user_data table.
+    """
+    cursor = connection.cursor()
+    try:
+        insert_query = f"""
+        INSERT INTO `{TABLE_NAME}` (user_id, name, email, age) 
+        VALUES (%s, %s, %s, %s)
+        """
+        
+        with open(data_file_path, 'r', newline='') as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Skip the header row
+            
+            records_to_insert = []
+            for row in reader:
+                user_id = str(uuid.uuid4())
+                name, email, age = row
+                records_to_insert.append((user_id, name, email, int(age)))
+        
+            if records_to_insert:
+                cursor.executemany(insert_query, records_to_insert)
+                connection.commit()
+                print("Data inserted successfully.")
+            else:
+                print("No data to insert.")
+
+    except FileNotFoundError:
+        print(f"Error: The file '{data_file_path}' was not found.")
+    except mysql.connector.Error as err:
+        print(f"Error inserting data: {err}")
+    finally:
+        cursor.close()

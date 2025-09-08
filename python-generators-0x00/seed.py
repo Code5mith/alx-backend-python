@@ -3,6 +3,8 @@ from mysql.connector import errorcode
 from dotenv import load_dotenv
 import os 
 import faker 
+import pandas as pd
+import random
 
 load_dotenv()
 
@@ -102,7 +104,9 @@ def create_table(DB_Connection, Return_Connection:bool = False):
   
 
 def insert_data(DB_Connection):
-  
+
+  df = pd.read_csv("sample_data.csv") 
+
   cursor = DB_Connection.cursor()
 
   cursor.execute(
@@ -130,15 +134,18 @@ def insert_data(DB_Connection):
         if result[0] == "user_data":
 
           print("Table found!")
-          cursor.execute(
-              """
-                INSERT INTO `user_data` (name, email, age)
-                VALUES (%s, %s, %s);
-              """,
-              (factory.name(), factory.email(), factory.random_number(2))
-            )
+
+          for x in range(5):
+            index = random.randint(0,len(df)) 
+            cursor.execute(
+                """
+                  INSERT INTO `user_data` (name, email, age)
+                  VALUES (%s, %s, %s);
+                """,
+                (df["name"][index], df["email"][index], int(df["age"][index]))
+              )
           
-          DB_Connection.commit()
+            DB_Connection.commit()
 
         else:
           print("*** Table not found!")

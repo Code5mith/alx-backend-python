@@ -17,12 +17,15 @@ def stream_users_in_batches(batch_size):
         )
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch rows in batches
+        print(f"Fetching user_data in batches of {batch_size}")
         cursor.execute("SELECT user_id, name, email, age FROM user_data")
+        
+        # Yield batches
         while True:
             batch = cursor.fetchmany(batch_size)
             if not batch:
                 break
+            print(f"Yielding batch of {len(batch)} users")
             yield batch
             
     finally:
@@ -30,10 +33,13 @@ def stream_users_in_batches(batch_size):
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
+            print("Database connection closed")
 
 def batch_processing(batch_size):
-    """Process batches to yield users over 25 years old."""
+    """Yield users over 25 years old from batches."""
     for batch in stream_users_in_batches(batch_size):
+        print(f"Processing batch of {len(batch)} users")
         for user in batch:
             if user['age'] > 25:
+                print(f"Yielding user: {user['name']}, age {user['age']}")
                 yield user

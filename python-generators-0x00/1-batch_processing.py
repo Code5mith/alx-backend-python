@@ -42,4 +42,4 @@ def batch_processing(batch_size):
         for user in batch:
             if user['age'] > 25:
                 print(f"Yielding user: {user['name']}, age {user['age']}")
-                yield user
+                return user

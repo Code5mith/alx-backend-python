@@ -22,7 +22,7 @@ def paginate_users(page_size, offset):
     conn = connect_to_prodev()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(f"SELECT user_id, name, email, age FROM user_data LIMIT {page_size} OFFSET {offset}")
+        cursor.execute(f"SELECT * FROM user_data LIMIT {page_size} OFFSET {offset}")
         rows = cursor.fetchall()
         return rows
     finally:

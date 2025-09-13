@@ -6,7 +6,6 @@ def stream_user_ages():
     """Yield user ages one by one from user_data table."""
     load_dotenv()
     conn = None
-    cursor = None
     try:
         # Connect to MySQL
         conn = mysql.connector.connect(
@@ -23,8 +22,6 @@ def stream_user_ages():
             yield age[0]
             
     finally:
-        if cursor:
-            cursor.close()
         if conn and conn.is_connected():
             conn.close()
 
@@ -32,6 +29,7 @@ def calculate_average_age():
     """Calculate average age using streamed ages."""
     total_age = 0
     count = 0
+    # pause for every yeild call 
     for age in stream_user_ages():
         total_age += age
         count += 1

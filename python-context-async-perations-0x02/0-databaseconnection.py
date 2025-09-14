@@ -27,5 +27,5 @@ class DB_CONNECTION():
 with DB_CONNECTION() as conn:
     if conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Users")
+        cursor.execute("SELECT * FROM users")
     

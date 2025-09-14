@@ -27,7 +27,5 @@ class DB_CONNECTION():
 with DB_CONNECTION() as conn:
     if conn:
         cursor = conn.cursor()
-        cursor.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)")
-        cursor.execute("INSERT INTO users (id, name) VALUES (1, 'Alice')")
-        conn.commit()
+        cursor.execute("SELECT * FROM Users")
     

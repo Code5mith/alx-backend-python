@@ -24,7 +24,7 @@ async def async_fetch_older_users():
 async def fetch_concurrently():
     print("Running queries concurrently...")
 
-    all_users, older_users = await asyncio.gather(async_fetch_all_users(), async_fetch_older_users())
+    all_users, older_users = await asyncio.gather(async_fetch_users(), async_fetch_older_users())
     
     print("All users:", all_users)
     print("Users older than 40:", older_users)

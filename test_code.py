@@ -22,3 +22,4 @@ print(test["a"]["b"])
 nested_map = {"a": {"b": {"c": 1}}} 
 if __name__ == "__main__":  
     print(access_nested_map(nested_map, ["a", "b", "c"])) 
+    print(access_nested_map(nested_map, ["d"])) 

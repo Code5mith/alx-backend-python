@@ -3,8 +3,8 @@ import unittest
 from unittest.mock import patch, Mock
 from utils import *
 from client import *
-from fixtures import *
-from parameterized import parameterized
+from fixtures import TEST_PAYLOAD
+from parameterized import parameterized, parameterized_class
 
 class TestGithubOrgClient(unittest.TestCase):
 
@@ -63,4 +63,43 @@ class TestGithubOrgClient(unittest.TestCase):
         client = GithubOrgClient("testorg")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
-    
+
+@parameterized_class([
+    {
+        "org_name": "testorg",
+        "org_payload": TEST_PAYLOAD[0][1][0]["id"].org_payload,
+        "repos_payload": fixtures.repos_payload,
+        "expected_repos": fixtures.expected_repos,
+        "apache2_repos": fixtures.apache2_repos
+    }
+])
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Set up class by mocking requests.get with fixtures."""
+        def get_json_side_effect(url):
+            if url == f"https://api.github.com/orgs/{cls.org_name}":
+                return cls.org_payload
+            if url == cls.org_payload["repos_url"]:
+                return cls.repos_payload
+            return None
+
+        cls.get_patcher = patch('requests.get', return_value=Mock(json=Mock(side_effect=get_json_side_effect)))
+        cls.get_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop the patcher."""
+        cls.get_patcher.stop()
+
+    def test_public_repos(self):
+        """Test GithubOrgClient.public_repos returns expected repos."""
+        client = GithubOrgClient(self.org_name)
+        result = client.public_repos
+        self.assertEqual(result, self.expected_repos)
+
+    def test_public_repos_with_license(self):
+        """Test GithubOrgClient.public_repos with license filter returns apache2 repos."""
+        client = GithubOrgClient(self.org_name)
+        result = client.public_repos(license="apache-2.0")
+        self.assertEqual(result, self.apache2_repos)

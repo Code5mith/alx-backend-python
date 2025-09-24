@@ -1,23 +1,34 @@
 from django.db import models
 from django_enum import EnumField
 from django.db.models.functions import Now
+import uuid
+from django.contrib.auth.models import AbstractUser
 
-# Create your models hereclass User(models.Model):
-class User(models.Model):
+class UserModel(AbstractUser):
+    """
+    A custom user model that extends Django's built-in AbstractUser.
 
-    class RoleEnum(models.TextChoices):
-        VALUE0 = "V0", "guest"
-        VALUE1 = "V1", "host"
-        VALUE2 = "V2", "admin"
+    The AbstractUser model already includes fields like 'username', 'email',
+    'first_name', 'last_name', 'is_staff', 'is_active', 'date_joined',
+    and all the necessary fields for authentication and permissions.
 
-    user_id = models.UUIDField(primary_key=True, auto_created=True)
-    first_name  = models.CharField(null=False)
-    last_name  = models.CharField(null=False)
-    email = models.EmailField(_(""), unique=True, max_length=254, db_index=True)
-    password_hash = models.CharField(null=False)
-    phone_number = models.CharField(null=True)
-    role = EnumField(RoleEnum, null=False, default=None)
-    created_at = models.DateTimeField(db_default=Now())
+    We do not need to redefine fields that are already provided by AbstractUser.
+    
+    Any custom fields, such as a 'phone_number' or 'birth_date', should be
+    added here.
+    """
+    class Role(models.TextChoices):
+        GUEST = 'GUEST', 'Guest'
+        MEMBER = 'MEMBER', 'Member'
+        ADMIN = 'ADMIN', 'Administrator'
+
+    phone_number = models.CharField(max_length=15, blank=True)
+    role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        default=Role.MEMBER,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

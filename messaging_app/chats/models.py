@@ -4,7 +4,7 @@ from django.db.models.functions import Now
 import uuid
 from django.contrib.auth.models import AbstractUser
 
-class UserModel(AbstractUser):
+class User(AbstractUser):
     """
     A custom user model that extends Django's built-in AbstractUser.
 

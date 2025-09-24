@@ -23,7 +23,7 @@ class UserModel(AbstractUser):
         ADMIN = 'ADMIN', 'Administrator'
 
     phone_number = models.CharField(max_length=15, blank=True)
-    password_hash = models.CharField(_(""), null=False)
+    password_hash = models.CharField(null=False)
     role = models.CharField(
         max_length=10,
         choices=Role.choices,

@@ -1,0 +1,203 @@
+{
+  "info": {
+    "name": "Messaging App API",
+    "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+    "description": "Postman collection for ALX messaging_app API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Obtain JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/token/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "token", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/token/refresh/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "token", "refresh", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participants\": [{{user_id1}}, {{user_id2}}]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/conversations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "conversations", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation_id\": {{conversation_id}},\n  \"text\": \"Hello everyone!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/messages/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/messages/?conversation_id={{conversation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", ""],
+              "query": [
+                {
+                  "key": "conversation_id",
+                  "value": "{{conversation_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Unauthorized Access Test",
+      "item": [
+        {
+          "name": "Access Messages Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/messages/?conversation_id={{conversation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", ""],
+              "query": [
+                {
+                  "key": "conversation_id",
+                  "value": "{{conversation_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "username",
+      "value": "user1"
+    },
+    {
+      "key": "password",
+      "value": "password123"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "conversation_id",
+      "value": ""
+    },
+    {
+      "key": "user_id1",
+      "value": "1"
+    },
+    {
+      "key": "user_id2",
+      "value": "2"
+    }
+  ]
+}

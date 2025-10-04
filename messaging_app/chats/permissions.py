@@ -1,9 +1,10 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
-class IsOwner(BasePermission):
+class IsOwner(permissions.BasePermission):
     """
-    Allows access only to objects owned by the requesting user.
+    Custom permission: only allow users to access their own objects.
     """
 
     def has_object_permission(self, request, view, obj):
+        # Assuming your model has a `user` field (FK to the owner)
         return obj.user == request.user

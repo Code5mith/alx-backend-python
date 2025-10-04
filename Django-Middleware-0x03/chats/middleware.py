@@ -1,6 +1,6 @@
 from django.http import HttpResponseForbidden
 
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     """
     Middleware to enforce role-based access.
     Only admin or moderator users can access certain URLs (e.g., message management).
@@ -15,4 +15,12 @@ class RolePermissionMiddleware:
 
         # Check if request path is restricted
         if any(path in request.path for path in restricted_paths):
-            user
+            user = request.user
+            if not user.is_authenticated:
+                return HttpResponseForbidden("Access denied: unauthenticated user.")
+            # Assuming 'role' attribute exists on user model
+            if getattr(user, "role", None) not in ["admin", "moderator"]:
+                return HttpResponseForbidden("Access denied: insufficient permissions.")
+
+        response = self.get_response(request)
+        return response

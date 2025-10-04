@@ -1,10 +1,20 @@
 from rest_framework import permissions
 
-class IsOwner(permissions.BasePermission):
+class IsParticipantOfConversation(permissions.BasePermission):
     """
-    Custom permission: only allow users to access their own objects.
+    Custom permission to allow only participants of a conversation
+    to view, send, update, or delete messages.
     """
 
+    def has_permission(self, request, view):
+        # Only authenticated users can access the API at all
+        return request.user and request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
-        # Assuming your model has a `user` field (FK to the owner)
-        return obj.user == request.user
+        """
+        Ensure the requesting user is part of the conversation.
+        Assumes:
+          - Message model has a `conversation` FK
+          - Conversation model has a `participants` ManyToMany field
+        """
+        return request.user in obj.conversation.participants.all()

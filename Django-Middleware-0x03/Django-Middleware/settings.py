@@ -50,6 +50,9 @@ MIDDLEWARE = [
     'messaging_app.middleware.RequestLoggingMiddleware',
     'messaging_app.middleware.RestrictAccessByTimeMiddleware',
     'messaging_app.middleware.OffensiveLanguageMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common'
 ]
 
 ROOT_URLCONF = 'messaging_app.urls'

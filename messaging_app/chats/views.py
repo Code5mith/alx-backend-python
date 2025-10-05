@@ -8,41 +8,29 @@ from .permissions import IsParticipantOfConversation
 from .pagination import MessagePagination
 from .filters import MessageFilter
 
-class MessageViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
-    pagination_class = MessagePagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = MessageFilter
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import Message
+from .serializers import MessageSerializer
 
+class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.select_related("sender", "receiver", "parent_message").prefetch_related("replies")
     serializer_class = MessageSerializer
-
-    def get_queryset(self):
-        conversation_id = self.request.query_params.get("conversation_id")
-        if not conversation_id:
-            return Message.objects.none()
-
-        try:
-            conversation = Conversation.objects.get(id=conversation_id)
-        except Conversation.DoesNotExist:
-            return Message.objects.none()
-
-        if self.request.user not in conversation.participants.all():
-            return Message.objects.none()
-
-        return Message.objects.filter(conversation=conversation).order_by("-created_at")
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        conversation_id = self.request.data.get("conversation_id")
-        try:
-            conversation = Conversation.objects.get(id=conversation_id)
-        except Conversation.DoesNotExist:
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied(detail="Invalid conversation_id")
+        serializer.save(
+            sender=self.request.user,
+            receiver=self.request.data.get("receiver"),
+            parent_message_id=self.request.data.get("parent_message")  # optional for replies
+        )
 
-        if self.request.user not in conversation.participants.all():
-            from rest_framework.response import Response
-            from rest_framework import status
-            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer.save(sender=self.request.user, conversation=conversation)
+    # ✅ Custom action to fetch conversations
+    @action(detail=False, methods=["get"])
+    def my_conversations(self, request):
+        user = request.user
+        # Message.objects.filter + select_related for optimization
+        messages = Message.objects.filter(receiver=user).select_related("sender", "receiver", "parent_message")
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -46,9 +46,30 @@ class Conversation(models.Model):
     conversation_id = models.UUIDField(_(""), primary_key=True)
     participants_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field="user_id", related_name='equipment')
     created_at = models.DateTimeField(db_default=Now())
-
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    # Self-referential foreign key for replies (threaded conversations)
+    parent_message = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='replies',
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
+
+    def get_all_replies(self):
+        """
+        Recursively fetch all replies to this message in threaded format.
+        """
+        all_replies = []
+        for reply in self.replies.all():
+            all_replies.append(reply)
+            all_replies.extend(reply.get_all_replies())  # recursion
+        return all_replies

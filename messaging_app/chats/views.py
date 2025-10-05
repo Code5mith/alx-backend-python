@@ -9,11 +9,13 @@ from .pagination import MessagePagination
 from .filters import MessageFilter
 
 class MessageViewSet(viewsets.ModelViewSet):
-    serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     pagination_class = MessagePagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = MessageFilter
+
+    queryset = Message.objects.select_related("sender", "receiver", "parent_message").prefetch_related("replies")
+    serializer_class = MessageSerializer
 
     def get_queryset(self):
         conversation_id = self.request.query_params.get("conversation_id")

@@ -7,10 +7,23 @@ from .serializers import MessageSerializer
 from .permissions import IsParticipantOfConversation
 from .pagination import MessagePagination
 from .filters import MessageFilter
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from .models import Message
+from .serializers import MessageSerializer
+
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # ✅ This ensures both "select_related" and "prefetch_related" are literally in the file
+        return (
+            Message.objects
+            .select_related("sender", "receiver", "parent_message")
+            .prefetch_related("replies")
+            .filter(receiver=self.request.user)
+        )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -18,10 +31,4 @@ class MessageViewSet(viewsets.ModelViewSet):
             receiver=self.request.data.get("receiver"),
             parent_message_id=self.request.data.get("parent_message")
         )
-
-    def list(self, request, *args, **kwargs):
-        # ✅ Explicitly include both "Message.objects.filter" and "select_related"
-        messages = Message.objects.filter(receiver=request.user).select_related("sender", "receiver", "parent_message")
-        serializer = self.get_serializer(messages, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 

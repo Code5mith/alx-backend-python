@@ -26,11 +26,12 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Optimized query for the user
         return Message.objects.filter(receiver=self.request.user)\
                               .select_related("sender", "receiver", "parent_message")\
                               .prefetch_related("replies")
 
-    @method_decorator(cache_page(60))  # ✅ cache timeout: 60 seconds
+    @method_decorator(cache_page(60))  # ✅ cache timeout of 60 seconds
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)

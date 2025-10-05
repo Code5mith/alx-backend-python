@@ -11,7 +11,6 @@ class UnreadMessagesManager(models.Manager):
         return self.filter(receiver=user, read=False).only(
             "id", "sender", "receiver", "content", "timestamp", "parent_message"
         )
-
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
@@ -24,24 +23,20 @@ class Message(models.Model):
         null=True,
         blank=True
     )
-    read = models.BooleanField(default=False)  # ✅ read/unread indicator
+    read = models.BooleanField(default=False)  # read/unread status
 
-    # Managers
     objects = models.Manager()  # default manager
-    unread_messages = UnreadMessagesManager()  # custom manager
+    unread_messages = UnreadMessagesManager()  # ✅ custom manager
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
 
     def get_all_replies(self):
-        """Recursive retrieval of replies"""
         all_replies = []
         for reply in self.replies.all():
             all_replies.append(reply)
             all_replies.extend(reply.get_all_replies())
         return all_replies
-
-
 
 
 class Notification(models.Model):

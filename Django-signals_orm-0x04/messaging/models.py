@@ -1,13 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# messaging/models.py
+from django.db import models
+from django.contrib.auth.models import User
+
+class UnreadMessagesManager(models.Manager):
+    """
+    Custom manager to filter unread messages for a user.
+    """
+    def for_user(self, user):
+        return self.filter(receiver=user, read=False).only("id", "sender", "content", "timestamp", "parent_message")
+
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
-    # Must contain this exact string: "parent_message"
     parent_message = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
@@ -15,6 +24,23 @@ class Message(models.Model):
         null=True,
         blank=True
     )
+    read = models.BooleanField(default=False)  # ✅ read/unread status
+
+    # Default manager
+    objects = models.Manager()
+    # Custom manager for unread messages
+    unread_messages = UnreadMessagesManager()
+
+    def __str__(self):
+        return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
+
+    def get_all_replies(self):
+        all_replies = []
+        for reply in self.replies.all():
+            all_replies.append(reply)
+            all_replies.extend(reply.get_all_replies())
+        return all_replies
+
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content[:30]}"

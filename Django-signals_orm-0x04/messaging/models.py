@@ -7,8 +7,26 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    # Must contain this exact string: "parent_message"
+    parent_message = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='replies',
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
-        return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
+        return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
+
+    def get_all_replies(self):
+        # Recursive query example
+        all_replies = []
+        for reply in self.replies.all():
+            all_replies.append(reply)
+            all_replies.extend(reply.get_all_replies())
+        return all_replies
+
 
 
 class Notification(models.Model):

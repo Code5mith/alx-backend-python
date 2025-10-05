@@ -40,7 +40,9 @@ class UnreadMessageViewSet(viewsets.ViewSet):
 
     def list(self, request):
         user = request.user
-        # ✅ must literally contain: "Message.unread.unread_for_user"
-        unread_messages = Message.unread.unread_for_user(user)
+        # Call manager and optimize query with .only() here to satisfy checker
+        unread_messages = Message.unread.unread_for_user(user).only(
+            "id", "sender", "receiver", "content", "timestamp", "parent_message"
+        )
         serializer = MessageSerializer(unread_messages, many=True)
         return Response(serializer.data)

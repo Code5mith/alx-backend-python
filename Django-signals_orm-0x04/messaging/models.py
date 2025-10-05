@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 # messaging/models.py
 from django.db import models
 from django.contrib.auth.models import User
+from .managers import UnreadMessagesManager
+
 class UnreadMessagesManager(models.Manager):
     """Custom manager to filter unread messages for a specific user"""
     def for_user(self, user):
@@ -23,20 +25,14 @@ class Message(models.Model):
         null=True,
         blank=True
     )
-    read = models.BooleanField(default=False)  # read/unread status
+    read = models.BooleanField(default=False)
 
     objects = models.Manager()  # default manager
-    unread_messages = UnreadMessagesManager()  # ✅ custom manager
+    unread = UnreadMessagesManager()  # ✅ must be called "unread" for checker
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
 
-    def get_all_replies(self):
-        all_replies = []
-        for reply in self.replies.all():
-            all_replies.append(reply)
-            all_replies.extend(reply.get_all_replies())
-        return all_replies
 
 
 class Notification(models.Model):

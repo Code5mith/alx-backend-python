@@ -8,12 +8,6 @@ from .permissions import IsParticipantOfConversation
 from .pagination import MessagePagination
 from .filters import MessageFilter
 
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from .models import Message
-from .serializers import MessageSerializer
-
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.select_related("sender", "receiver", "parent_message").prefetch_related("replies")
     serializer_class = MessageSerializer

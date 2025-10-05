@@ -46,3 +46,9 @@ class Conversation(models.Model):
     conversation_id = models.UUIDField(_(""), primary_key=True)
     participants_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field="user_id", related_name='equipment')
     created_at = models.DateTimeField(db_default=Now())
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)

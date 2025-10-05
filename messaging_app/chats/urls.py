@@ -1,8 +1,7 @@
-from django.contrib import admin
-from django.urls import path,include
-from views import *
+# messaging/urls.py
+from django.urls import path
+from .views import delete_user
 
 urlpatterns = [
-    path('chats/', include("chats.urls")),
-
+    path("delete-account/", delete_user, name="delete_user"),
 ]

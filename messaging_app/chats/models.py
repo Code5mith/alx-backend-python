@@ -46,7 +46,7 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    # ✅ Self-referential foreign key for threaded replies
+    # Must contain this exact string: "parent_message"
     parent_message = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
@@ -57,4 +57,12 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
+
+    def get_all_replies(self):
+        # Recursive query example
+        all_replies = []
+        for reply in self.replies.all():
+            all_replies.append(reply)
+            all_replies.extend(reply.get_all_replies())
+        return all_replies
 

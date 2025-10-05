@@ -4,13 +4,13 @@ from django.contrib.auth.models import User
 # messaging/models.py
 from django.db import models
 from django.contrib.auth.models import User
-
 class UnreadMessagesManager(models.Manager):
-    """
-    Custom manager to filter unread messages for a user.
-    """
+    """Custom manager to filter unread messages for a specific user"""
     def for_user(self, user):
-        return self.filter(receiver=user, read=False).only("id", "sender", "content", "timestamp", "parent_message")
+        # Only retrieve necessary fields with .only()
+        return self.filter(receiver=user, read=False).only(
+            "id", "sender", "receiver", "content", "timestamp", "parent_message"
+        )
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
@@ -24,34 +24,23 @@ class Message(models.Model):
         null=True,
         blank=True
     )
-    read = models.BooleanField(default=False)  # ✅ read/unread status
+    read = models.BooleanField(default=False)  # ✅ read/unread indicator
 
-    # Default manager
-    objects = models.Manager()
-    # Custom manager for unread messages
-    unread_messages = UnreadMessagesManager()
+    # Managers
+    objects = models.Manager()  # default manager
+    unread_messages = UnreadMessagesManager()  # custom manager
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
 
     def get_all_replies(self):
+        """Recursive retrieval of replies"""
         all_replies = []
         for reply in self.replies.all():
             all_replies.append(reply)
             all_replies.extend(reply.get_all_replies())
         return all_replies
 
-
-    def __str__(self):
-        return f"{self.sender} -> {self.receiver}: {self.content[:30]}"
-
-    def get_all_replies(self):
-        # Recursive query example
-        all_replies = []
-        for reply in self.replies.all():
-            all_replies.append(reply)
-            all_replies.extend(reply.get_all_replies())
-        return all_replies
 
 
 

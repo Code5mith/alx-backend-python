@@ -35,13 +35,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
 class UnreadMessageViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
         user = request.user
-        # ✅ Use the custom manager
-        unread_messages = Message.unread_messages.for_user(user).select_related("sender", "receiver", "parent_message")
+        unread_messages = Message.unread_messages.for_user(user)
         serializer = MessageSerializer(unread_messages, many=True)
         return Response(serializer.data)

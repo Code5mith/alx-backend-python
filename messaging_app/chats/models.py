@@ -35,13 +35,6 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name}"
     
 
-class Message(models.Model):
-    message_id = models.UUIDField(_(""), primary_key=True)
-    sender_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field="user_id", related_name='equipment')
-    message_body = models.TextField(_(""), null=False)
-    sent_at = models.DateTimeField(db_default=Now())
-
-
 class Conversation(models.Model):
     conversation_id = models.UUIDField(_(""), primary_key=True)
     participants_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field="user_id", related_name='equipment')

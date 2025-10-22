@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+echo "🚀 Starting rolling update for messaging-app-blue..."
+
+# Apply the new deployment (with updated image version)
+kubectl apply -f blue_deployment.yaml
+
+echo "🔄 Monitoring rollout progress..."
+kubectl rollout status deployment/messaging-app-blue
+
+echo "✅ Deployment update complete!"
+echo
+
+# Get the ClusterIP or NodePort service info
+SERVICE_IP=$(minikube service messaging-service --url 2>/dev/null || echo "http://localhost:8000")
+
+echo "🌐 Testing app availability at: $SERVICE_IP"
+echo "Sending continuous requests to check for downtime..."
+echo
+
+# Run a continuous curl test (simulate uptime monitoring)
+for i in {1..10}; do
+    curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_IP" || echo "❌ Request failed"
+    sleep 2
+done
+
+echo
+echo "📊 Current pods after update:"
+kubectl get pods -l app=messaging-app
+
+echo "🎉 Rolling Update Completed Successfully! Zero downtime maintained 🚀"

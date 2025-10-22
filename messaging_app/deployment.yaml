@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app-deployment
+  labels:
+    app: messaging-app
+spec:
+  replicas: 2  # run 2 pods for reliability
+  selector:
+    matchLabels:
+      app: messaging-app
+  template:
+    metadata:
+      labels:
+        app: messaging-app
+    spec:
+      containers:
+      - name: messaging-app
+        image: your-dockerhub-username/messaging_app:latest  # 🔥 Replace with your actual image
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: messaging_app.settings
+        - name: DATABASE_URL
+          value: mysql://user:password@db-service:3306/messagingdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-app-service
+  labels:
+    app: messaging-app
+spec:
+  selector:
+    app: messaging-app
+  type: ClusterIP  # internal only
+  ports:
+  - port: 8000
+    targetPort: 8000

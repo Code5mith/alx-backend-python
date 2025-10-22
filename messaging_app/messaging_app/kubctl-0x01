@@ -1,0 +1,30 @@
+#!/bin/bash
+# Script: kubctl-0x01
+# Purpose: Scale Django app deployment and monitor performance
+
+DEPLOYMENT_NAME="messaging-app-deployment"
+NAMESPACE="default"
+REPLICAS=3
+
+echo "🔹 Scaling $DEPLOYMENT_NAME to $REPLICAS replicas..."
+kubectl scale deployment "$DEPLOYMENT_NAME" --replicas="$REPLICAS" -n "$NAMESPACE"
+
+echo "⏳ Waiting for pods to become ready..."
+kubectl rollout status deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE"
+
+echo "✅ Verifying running pods..."
+kubectl get pods -n "$NAMESPACE"
+
+# Optional: get service info (to know which ClusterIP or NodePort to test)
+SERVICE_NAME="messaging-app-service"
+echo "🌐 Service Info:"
+kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE"
+
+# Load testing (you can use NodePort or Minikube service URL)
+APP_URL=$(minikube service "$SERVICE_NAME" --url)
+echo "🚀 Starting load test on: $APP_URL"
+wrk -t4 -c100 -d30s "$APP_URL"
+
+# Monitor resource usage
+echo "📊 Resource usage:"
+kubectl top pods -n "$NAMESPACE"
